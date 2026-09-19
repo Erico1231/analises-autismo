@@ -1,0 +1,998 @@
+---
+title: "markdown1"
+output: html_document
+date: "2026-09-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(psych)
+library(readxl)
+library(ez)
+```
+
+```{r}
+# FUNÇÃO PARA LER ARQUIVOS EXCEL DO GITHUB
+
+ler_excel_github <- function(url) {
+  
+  arquivo_temp <- tempfile(fileext = ".xlsx")
+  
+  download.file(
+    url,
+    destfile = arquivo_temp,
+    mode = "wb"
+  )
+  
+  readxl::read_excel(arquivo_temp)
+}
+
+
+# LINKS DAS BASES
+
+# Base 1 — TEA Adulto
+url_base1 <- "https://raw.githubusercontent.com/Erico1231/analises-autismo/main/Teste%20do%20Espectro%20Autista%20(para%20o%20Github).xlsx"
+
+# Base 2 — TEA Mulheres
+url_base2 <- "https://raw.githubusercontent.com/Erico1231/analises-autismo/main/Teste%20do%20Espectro%20Autista%20para%20Mulheres%20(para%20o%20Github).xlsx"
+
+# Base 3 — TEA Adolescentes
+url_base3 <- "https://raw.githubusercontent.com/Erico1231/analises-autismo/main/Teste%20do%20Espectro%20Autista%20para%20Adolescentes%20(para%20o%20Github).xlsx"
+
+# Base 4 — Personalidade
+url_base4 <- "https://raw.githubusercontent.com/Erico1231/analises-autismo/main/Teste%20de%20Personalidade%20(Para%20o%20Github).xlsx"
+
+
+# IMPORTAÇÃO DAS BASES
+
+base1 <- ler_excel_github(url_base1)
+base2 <- ler_excel_github(url_base2)
+base3 <- ler_excel_github(url_base3)
+base4 <- ler_excel_github(url_base4)
+
+
+# Conferir dimensões das novas bases importadas do GitHub
+
+dim(base1)
+dim(base2)
+dim(base3)
+dim(base4)
+```
+
+
+
+
+```{r}
+# Função para converter Likert em números
+converter_likert <- function(x) {
+  dplyr::recode(
+    x,
+    "Discordo plenamente" = 1,
+    "Discordo parcialmente" = 2,
+    "Não concordo nem discordo" = 3,
+    "Concordo parcialmente" = 4,
+    "Concordo plenamente" = 5,
+    .default = NA_real_
+  )
+}
+
+# Base 1 — TEA Adulto: C até V
+base1[, 3:22] <- lapply(base1[, 3:22], converter_likert)
+
+# Base 2 — TEA Mulheres: C até R
+base2[, 3:18] <- lapply(base2[, 3:18], converter_likert)
+
+# Base 3 — TEA Adolescentes: C até AU
+base3[, 3:47] <- lapply(base3[, 3:47], converter_likert)
+
+# Base 4 — Personalidade: C até AA
+base4[, 3:27] <- lapply(base4[, 3:27], converter_likert)
+
+
+# Conferir os valores presentes nas colunas Likert após a conversão
+
+sort(unique(unlist(base1[, 3:22])))
+sort(unique(unlist(base2[, 3:18])))
+sort(unique(unlist(base3[, 3:47])))
+sort(unique(unlist(base4[, 3:27])))
+```
+```{r}
+# VERIFICAR SE ALGUMA RESPOSTA VIROU NA APÓS A CONVERSÃO LIKERT
+
+# Quantidade total de NA nos itens de cada base
+sum(is.na(base1[, 3:22]))  # TEA Adulto
+sum(is.na(base2[, 3:18]))  # TEA Mulheres
+sum(is.na(base3[, 3:47]))  # TEA Adolescentes
+sum(is.na(base4[, 3:27]))  # Personalidade
+```
+
+
+
+
+
+```{r}
+# SELEÇÃO DOS ITENS
+
+itens1 <- base1[, 3:22]   # C até V — TEA Adulto (20 itens)
+itens2 <- base2[, 3:18]   # C até R — TEA Mulheres (16 itens)
+itens3 <- base3[, 3:47]   # C até AU — TEA Adolescentes (45 itens)
+itens4 <- base4[, 3:27]   # C até AA — Personalidade (25 itens)
+
+
+# VERIFICAÇÃO
+
+dim(itens1)
+dim(itens2)
+dim(itens3)
+dim(itens4)
+
+str(itens1)
+
+colSums(is.na(itens1))
+```
+
+```{r}
+names(base1)[1:5]
+names(base2)[1:5]
+names(base3)[1:5]
+names(base4)[1:5]
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Base 1 — TEA Adulto
+
+### Definição dos quatro fatores
+
+```{r}
+# Fator 1 - Comunicação social
+fator1_base1 <- c(6, 8, 10, 11, 19)
+
+# Fator 2 - Interação social
+fator2_base1 <- c(4, 5, 12, 13, 16)
+
+# Fator 3 - Sensibilidade sensorial
+fator3_base1 <- c(1, 7, 9, 17, 20)
+
+# Fator 4 - Padrões restritos e repetitivos
+fator4_base1 <- c(2, 3, 14, 15, 18)
+```
+
+### Alfa de Cronbach da escala completa
+
+```{r}
+alpha_total_base1 <- psych::alpha(itens1)
+
+alpha_total_base1$total$raw_alpha
+```
+excelente consistência interna.
+
+### Alfa de Cronbach por fator
+
+```{r}
+alpha_f1_base1 <- psych::alpha(itens1[, fator1_base1])
+alpha_f2_base1 <- psych::alpha(itens1[, fator2_base1])
+alpha_f3_base1 <- psych::alpha(itens1[, fator3_base1])
+alpha_f4_base1 <- psych::alpha(itens1[, fator4_base1])
+
+alpha_f1_base1$total$raw_alpha
+alpha_f2_base1$total$raw_alpha
+alpha_f3_base1$total$raw_alpha
+alpha_f4_base1$total$raw_alpha
+```
+Todos estão acima de 0,70, então todos apresentam consistência interna aceitável ou melhor. Os três primeiros estão particularmente altos; o quarto continua com um valor adequado.
+
+### Pontuação de cada participante por fator
+
+```{r}
+# 1. Confirmar participantes
+nrow(itens1)
+
+# 2. Recriar dados_fatores1
+dados_fatores1 <- data.frame(
+  
+  Fator1 = rowMeans(
+    itens1[, fator1_base1],
+    na.rm = TRUE
+  ),
+  
+  Fator2 = rowMeans(
+    itens1[, fator2_base1],
+    na.rm = TRUE
+  ),
+  
+  Fator3 = rowMeans(
+    itens1[, fator3_base1],
+    na.rm = TRUE
+  ),
+  
+  Fator4 = rowMeans(
+    itens1[, fator4_base1],
+    na.rm = TRUE
+  )
+)
+
+# 3. Confirmar novamente
+nrow(dados_fatores1)
+```
+A amostra apresentou menor média em Comunicação social (M = 2,52). Os outros três fatores apresentaram médias bastante semelhantes, próximas de 3,5, sendo Padrões restritos e repetitivos o fator com a maior média (M = 3,54).
+
+
+### Média e desvio-padrão por fator
+
+```{r}
+resultado_fatores1 <- data.frame(
+  
+  Fator = c(
+    "Comunicação social",
+    "Interação social",
+    "Sensibilidade sensorial",
+    "Padrões restritos e repetitivos"
+  ),
+  
+  Media = sapply(
+    dados_fatores1,
+    mean,
+    na.rm = TRUE
+  ),
+  
+  DP = sapply(
+    dados_fatores1,
+    sd,
+    na.rm = TRUE
+  )
+)
+
+resultado_fatores1
+```
+
+### Preparação dos dados para ANOVA intragrupo
+
+```{r}
+dados_long1 <- data.frame(
+  
+  Participante = factor(
+    rep(
+      1:nrow(dados_fatores1),
+      times = 4
+    )
+  ),
+  
+  Fator = factor(
+    rep(
+      c(
+        "Fator1",
+        "Fator2",
+        "Fator3",
+        "Fator4"
+      ),
+      each = nrow(dados_fatores1)
+    )
+  ),
+  
+  Pontuacao = c(
+    dados_fatores1$Fator1,
+    dados_fatores1$Fator2,
+    dados_fatores1$Fator3,
+    dados_fatores1$Fator4
+  )
+)
+```
+
+### ANOVA intragrupo
+
+```{r}
+anova_base1 <- aov(
+  Pontuacao ~ Fator + Error(Participante/Fator),
+  data = dados_long1
+)
+
+summary(anova_base1)
+```
+há diferença estatisticamente significativa entre as médias dos quatro fatores
+
+### ANOVA intragrupo com teste de esfericidade
+
+```{r}
+anova_base1_ez <- ezANOVA(
+  data = dados_long1,
+  dv = Pontuacao,
+  wid = Participante,
+  within = Fator,
+  type = 3,
+  detailed = TRUE
+)
+
+anova_base1_ez
+```
+O teste de Mauchly indicou violação da suposição de esfericidade, W = 0,738, p = 0,009. Assim, foi aplicada a correção de Greenhouse–Geisser (ε = 0,819). A ANOVA de medidas repetidas indicou efeito significativo do fator, F(2,46; 127,84) = 29,96, p < 0,001, η²G = 0,128.
+
+
+
+### Comparações entre os fatores
+
+```{r}
+pairwise.t.test(
+  dados_long1$Pontuacao,
+  dados_long1$Fator,
+  paired = TRUE,
+  p.adjust.method = "bonferroni"
+)
+```
+
+### Interpretação
+
+A escala apresentou excelente consistência interna (α = 0,939), com consistência adequada a excelente também nos quatro fatores (α = 0,766–0,893). A ANOVA de medidas repetidas indicou diferenças significativas entre os fatores. Após correção de Greenhouse–Geisser, F(2,46; 127,84) = 29,96, p < 0,001. As comparações de Bonferroni indicaram que Comunicação social apresentou média significativamente menor que os demais fatores, enquanto não foram encontradas diferenças significativas entre Interação social, Sensibilidade sensorial e Padrões restritos e repetitivos.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Base 2 — TEA Mulheres
+
+### Definição dos quatro fatores
+
+```{r}
+# Fator 1 - Camuflagem, compensação e assimilação
+fator1_base2 <- c(3, 4, 8, 16)
+
+# Fator 2 - Autoidentificação e gênero
+fator2_base2 <- c(2, 6, 11, 14)
+
+# Fator 3 - Camuflagem e mascaramento
+fator3_base2 <- c(1, 9, 10, 15)
+
+# Fator 4 - Sensibilidade sensorial
+fator4_base2 <- c(5, 7, 12, 13)
+```
+
+### Alfa de Cronbach da escala completa
+
+```{r}
+alpha_total_base2 <- psych::alpha(itens2)
+
+alpha_total_base2$total$raw_alpha
+```
+excelente consistência interna (α = 0,917)
+
+### Alfa de Cronbach por fator
+
+```{r}
+alpha_f1_base2 <- psych::alpha(itens2[, fator1_base2])
+alpha_f2_base2 <- psych::alpha(itens2[, fator2_base2])
+alpha_f3_base2 <- psych::alpha(itens2[, fator3_base2])
+alpha_f4_base2 <- psych::alpha(itens2[, fator4_base2])
+
+alpha_f1_base2$total$raw_alpha
+alpha_f2_base2$total$raw_alpha
+alpha_f3_base2$total$raw_alpha
+alpha_f4_base2$total$raw_alpha
+```
+quatro fatores também apresentaram consistência interna adequada, com coeficientes variando entre α = 0,710 e α = 0,869. O Fator 1 apresentou a maior consistência interna (α = 0,869), seguido pelo Fator 3 (α = 0,794), Fator 2 (α = 0,749) e Fator 4 (α = 0,710).
+
+### Pontuação de cada participante por fator
+
+```{r}
+dados_fatores2 <- data.frame(
+  
+  Fator1 = rowMeans(
+    itens2[, fator1_base2],
+    na.rm = TRUE
+  ),
+  
+  Fator2 = rowMeans(
+    itens2[, fator2_base2],
+    na.rm = TRUE
+  ),
+  
+  Fator3 = rowMeans(
+    itens2[, fator3_base2],
+    na.rm = TRUE
+  ),
+  
+  Fator4 = rowMeans(
+    itens2[, fator4_base2],
+    na.rm = TRUE
+  )
+)
+
+nrow(itens2)
+nrow(dados_fatores2)
+```
+
+### Média e desvio-padrão por fator
+
+```{r}
+resultado_fatores2 <- data.frame(
+
+  Fator = c(
+    "Camuflagem, compensação e assimilação",
+    "Autoidentificação e gênero",
+    "Camuflagem e mascaramento",
+    "Sensibilidade sensorial"
+  ),
+
+  Media = sapply(
+    dados_fatores2,
+    mean,
+    na.rm = TRUE
+  ),
+
+  DP = sapply(
+    dados_fatores2,
+    sd,
+    na.rm = TRUE
+  )
+)
+
+resultado_fatores2
+```
+Sensibilidade sensorial apresentou a maior média (M = 3,34; DP = 1,06), enquanto Autoidentificação e gênero apresentou a menor média (M = 2,89; DP = 1,10). Camuflagem, compensação e assimilação (M = 2,94; DP = 1,28) e Camuflagem e mascaramento (M = 3,03; DP = 1,20) apresentaram médias intermediárias e próximas entre si.
+
+
+### Preparação dos dados para ANOVA intragrupo
+
+```{r}
+dados_long2 <- data.frame(
+
+  Participante = factor(
+    rep(
+      1:nrow(dados_fatores2),
+      times = 4
+    )
+  ),
+
+  Fator = factor(
+    rep(
+      c(
+        "Fator1",
+        "Fator2",
+        "Fator3",
+        "Fator4"
+      ),
+      each = nrow(dados_fatores2)
+    )
+  ),
+
+  Pontuacao = c(
+    dados_fatores2$Fator1,
+    dados_fatores2$Fator2,
+    dados_fatores2$Fator3,
+    dados_fatores2$Fator4
+  )
+)
+```
+
+### ANOVA intragrupo
+
+```{r}
+anova_base2 <- aov(
+  Pontuacao ~ Fator + Error(Participante/Fator),
+  data = dados_long2
+)
+
+summary(anova_base2)
+```
+A ANOVA de medidas repetidas não indicou diferença estatisticamente significativa entre os quatro fatores, F(3, 87) = 2,48, p = 0,067.
+
+
+### ANOVA intragrupo com teste de esfericidade
+
+```{r}
+anova_base2_ez <- ezANOVA(
+  data = dados_long2,
+  dv = Pontuacao,
+  wid = Participante,
+  within = Fator,
+  type = 3,
+  detailed = TRUE
+)
+
+anova_base2_ez
+```
+O teste de Mauchly indicou que o pressuposto de esfericidade foi atendido (W = 0,913, p = 0,773). Embora Sensibilidade sensorial tenha apresentado a maior média descritiva (M = 3,34; DP = 1,06), não foram encontradas evidências de diferenças significativas entre os fatores.
+
+
+### Comparações entre os fatores
+
+```{r}
+pairwise.t.test(
+  dados_long2$Pontuacao,
+  dados_long2$Fator,
+  paired = TRUE,
+  p.adjust.method = "bonferroni"
+)
+```
+
+### Interpretação
+
+A escala apresentou excelente consistência interna (α = 0,917), com consistência adequada nos quatro fatores (α = 0,710–0,869). A ANOVA de medidas repetidas não indicou diferenças significativas entre os fatores, F(3, 87) = 2,48, p = 0,067, com o pressuposto de esfericidade atendido (W = 0,913, p = 0,773). As comparações de Bonferroni também não revelaram diferenças significativas. Descritivamente, Sensibilidade sensorial apresentou a maior média (M = 3,34), embora sem diferença estatisticamente significativa em relação aos demais fatores.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Base 3 — TEA Adolescentes
+
+### Reversão dos itens
+
+```{r}
+# Itens reversos dentro das 45 colunas de itens3
+itens_reversos_base3 <- c(2, 9, 33, 39)
+
+# Criamos uma cópia para não alterar os dados originais
+itens3_corrigidos <- itens3
+
+# Escala de 1 a 5:
+# 1 vira 5, 2 vira 4, 3 permanece 3 etc.
+itens3_corrigidos[, itens_reversos_base3] <-
+  6 - itens3_corrigidos[, itens_reversos_base3]
+```
+
+### Definição dos nove fatores
+
+```{r}
+# Fator 1 - Comunicação e interação social
+fator1_base3 <- c(14, 31, 26, 40, 24)
+
+# Fator 2 - Sensibilidade sensorial
+fator2_base3 <- c(41, 3, 42, 1, 17)
+
+# Fator 3 - Interesses restritos e comportamentos repetitivos
+fator3_base3 <- c(27, 29, 23, 36, 13)
+
+# Fator 4 - Comportamento adaptativo e autonomia
+fator4_base3 <- c(6, 32, 35, 45, 12)
+
+# Fator 5 - Camuflagem e estratégias compensatórias
+fator5_base3 <- c(7, 10, 19, 18, 30)
+
+# Fator 6 - Regulação emocional
+fator6_base3 <- c(21, 20, 15, 44, 11)
+
+# Fator 7 - Motivação e interesse social
+fator7_base3 <- c(34, 4, 5, 38, 8)
+
+# Fator 8 - Autopercepção e insight social
+fator8_base3 <- c(33, 25, 39, 9, 2)
+
+# Fator 9 - Habilidades de teoria da mente
+fator9_base3 <- c(22, 37, 43, 28, 16)
+```
+
+### Alfa de Cronbach da escala completa
+
+```{r}
+alpha_total_base3 <- psych::alpha(itens3_corrigidos)
+
+alpha_total_base3$total$raw_alpha
+```
+Valor indiqua baixa consistência interna na amostra analisada, mas o tamanho amostral extremamente reduzido (N = 3) torna essa estimativa altamente instável. 
+
+
+### Alfa de Cronbach por fator
+
+```{r}
+alpha_f1_base3 <- psych::alpha(itens3_corrigidos[, fator1_base3])
+alpha_f2_base3 <- psych::alpha(itens3_corrigidos[, fator2_base3])
+alpha_f3_base3 <- psych::alpha(itens3_corrigidos[, fator3_base3])
+alpha_f4_base3 <- psych::alpha(itens3_corrigidos[, fator4_base3])
+alpha_f5_base3 <- psych::alpha(itens3_corrigidos[, fator5_base3])
+alpha_f6_base3 <- psych::alpha(itens3_corrigidos[, fator6_base3])
+alpha_f7_base3 <- psych::alpha(itens3_corrigidos[, fator7_base3])
+alpha_f8_base3 <- psych::alpha(itens3_corrigidos[, fator8_base3])
+alpha_f9_base3 <- psych::alpha(itens3_corrigidos[, fator9_base3])
+
+alpha_f1_base3$total$raw_alpha
+alpha_f2_base3$total$raw_alpha
+alpha_f3_base3$total$raw_alpha
+alpha_f4_base3$total$raw_alpha
+alpha_f5_base3$total$raw_alpha
+alpha_f6_base3$total$raw_alpha
+alpha_f7_base3$total$raw_alpha
+alpha_f8_base3$total$raw_alpha
+alpha_f9_base3$total$raw_alpha
+```
+Os coeficientes alfa de Cronbach apresentaram elevada variabilidade entre os fatores, incluindo valores negativos em alguns deles. Entretanto, devido ao tamanho amostral extremamente reduzido (N = 3), as estimativas de consistência interna são altamente instáveis e não permitem uma avaliação confiável da fidedignidade dos fatores. 
+
+
+
+### Pontuação de cada participante por fator
+
+```{r}
+dados_fatores3 <- data.frame(
+
+  Fator1 = rowMeans(itens3_corrigidos[, fator1_base3], na.rm = TRUE),
+  Fator2 = rowMeans(itens3_corrigidos[, fator2_base3], na.rm = TRUE),
+  Fator3 = rowMeans(itens3_corrigidos[, fator3_base3], na.rm = TRUE),
+  Fator4 = rowMeans(itens3_corrigidos[, fator4_base3], na.rm = TRUE),
+  Fator5 = rowMeans(itens3_corrigidos[, fator5_base3], na.rm = TRUE),
+  Fator6 = rowMeans(itens3_corrigidos[, fator6_base3], na.rm = TRUE),
+  Fator7 = rowMeans(itens3_corrigidos[, fator7_base3], na.rm = TRUE),
+  Fator8 = rowMeans(itens3_corrigidos[, fator8_base3], na.rm = TRUE),
+  Fator9 = rowMeans(itens3_corrigidos[, fator9_base3], na.rm = TRUE)
+
+)
+
+nrow(itens3_corrigidos)
+nrow(dados_fatores3)
+```
+
+### Média e desvio-padrão por fator
+
+```{r}
+resultado_fatores3 <- data.frame(
+
+  Fator = c(
+    "Comunicação e interação social",
+    "Sensibilidade sensorial",
+    "Interesses restritos e comportamentos repetitivos",
+    "Comportamento adaptativo e autonomia",
+    "Camuflagem e estratégias compensatórias",
+    "Regulação emocional",
+    "Motivação e interesse social",
+    "Autopercepção e insight social",
+    "Habilidades de teoria da mente"
+  ),
+
+  Media = sapply(
+    dados_fatores3,
+    mean,
+    na.rm = TRUE
+  ),
+
+  DP = sapply(
+    dados_fatores3,
+    sd,
+    na.rm = TRUE
+  )
+
+)
+
+resultado_fatores3
+```
+Interesses restritos e comportamentos repetitivos apresentou a maior média (M = 4,53; DP = 0,31), seguido por Comportamento adaptativo e autonomia (M = 4,13; DP = 0,42). Autopercepção e insight social apresentou a menor média (M = 2,80; DP = 0,87), seguida por Habilidades de teoria da mente (M = 2,93; DP = 0,90). Entretanto, devido ao tamanho amostral extremamente reduzido (N = 3), essas estatísticas descritivas devem ser interpretadas com cautela.
+
+### Preparação dos dados para ANOVA intragrupo
+
+```{r}
+dados_long3 <- data.frame(
+
+  Participante = factor(
+    rep(
+      1:nrow(dados_fatores3),
+      times = 9
+    )
+  ),
+
+  Fator = factor(
+    rep(
+      paste0("Fator", 1:9),
+      each = nrow(dados_fatores3)
+    )
+  ),
+
+  Pontuacao = c(
+    dados_fatores3$Fator1,
+    dados_fatores3$Fator2,
+    dados_fatores3$Fator3,
+    dados_fatores3$Fator4,
+    dados_fatores3$Fator5,
+    dados_fatores3$Fator6,
+    dados_fatores3$Fator7,
+    dados_fatores3$Fator8,
+    dados_fatores3$Fator9
+  )
+
+)
+```
+
+### ANOVA intragrupo
+
+```{r}
+anova_base3 <- aov(
+  Pontuacao ~ Fator + Error(Participante/Fator),
+  data = dados_long3
+)
+
+summary(anova_base3)
+```
+A ANOVA de medidas repetidas não indicou diferenças estatisticamente significativas entre os nove fatores, F(8, 16) = 1,15, p = 0,383. Contudo, devido ao tamanho amostral extremamente reduzido (N = 3), esse resultado deve ser interpretado com cautela e considerado apenas exploratório.
+
+### Interpretação
+A escala completa apresentou baixa consistência interna (α = 0,389), enquanto os coeficientes alfa de Cronbach dos nove fatores apresentaram elevada variabilidade, incluindo valores negativos em alguns fatores. Entretanto, devido ao tamanho amostral extremamente reduzido (N = 3), essas estimativas são altamente instáveis e não permitem conclusões confiáveis sobre a consistência interna da escala.
+
+Descritivamente, Interesses restritos e comportamentos repetitivos apresentou a maior média (M = 4,53; DP = 0,31), enquanto Autopercepção e insight social apresentou a menor média (M = 2,80; DP = 0,87). A ANOVA de medidas repetidas não indicou diferenças estatisticamente significativas entre os nove fatores, F(8, 16) = 1,15, p = 0,383. Contudo, em razão do tamanho amostral extremamente reduzido, tanto os resultados descritivos quanto inferenciais devem ser interpretados com cautela e considerados apenas exploratórios.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Base 4 — Personalidade
+
+### Definição dos cinco fatores
+
+```{r}
+# Cada fator possui 5 itens
+
+fator1_base4 <- 1:5    # Conscienciosidade
+fator2_base4 <- 6:10   # Amabilidade
+fator3_base4 <- 11:15  # Abertura à experiência
+fator4_base4 <- 16:20  # Extroversão
+fator5_base4 <- 21:25  # Neuroticismo
+```
+
+### Alfa de Cronbach da escala completa
+
+```{r}
+alpha_total_base4 <- psych::alpha(itens4)
+
+alpha_total_base4$total$raw_alpha
+```
+consistência interna adequada.
+
+
+### Alfa de Cronbach por fator
+
+```{r}
+alpha_f1_base4 <- psych::alpha(itens4[, fator1_base4])
+alpha_f2_base4 <- psych::alpha(itens4[, fator2_base4])
+alpha_f3_base4 <- psych::alpha(itens4[, fator3_base4])
+alpha_f4_base4 <- psych::alpha(itens4[, fator4_base4])
+alpha_f5_base4 <- psych::alpha(itens4[, fator5_base4])
+
+alpha_f1_base4$total$raw_alpha
+alpha_f2_base4$total$raw_alpha
+alpha_f3_base4$total$raw_alpha
+alpha_f4_base4$total$raw_alpha
+alpha_f5_base4$total$raw_alpha
+```
+Os fatores apresentaram consistência interna variável. Amabilidade (α = 0,858) e Neuroticismo (α = 0,811) apresentaram boa consistência interna, enquanto Conscienciosidade (α = 0,755) e Extroversão (α = 0,740) apresentaram consistência adequada. Abertura à experiência apresentou o menor coeficiente (α = 0,577), indicando consistência interna baixa.
+
+### Pontuação de cada participante por fator
+
+```{r}
+dados_fatores4 <- data.frame(
+
+  Fator1 = rowMeans(
+    itens4[, fator1_base4],
+    na.rm = TRUE
+  ),
+
+  Fator2 = rowMeans(
+    itens4[, fator2_base4],
+    na.rm = TRUE
+  ),
+
+  Fator3 = rowMeans(
+    itens4[, fator3_base4],
+    na.rm = TRUE
+  ),
+
+  Fator4 = rowMeans(
+    itens4[, fator4_base4],
+    na.rm = TRUE
+  ),
+
+  Fator5 = rowMeans(
+    itens4[, fator5_base4],
+    na.rm = TRUE
+  )
+
+)
+
+nrow(itens4)
+nrow(dados_fatores4)
+```
+
+### Média e desvio-padrão por fator
+
+```{r}
+resultado_fatores4 <- data.frame(
+
+  Fator = c(
+    "Conscienciosidade",
+    "Amabilidade",
+    "Abertura à experiência",
+    "Extroversão",
+    "Neuroticismo"
+  ),
+
+  Media = sapply(
+    dados_fatores4,
+    mean,
+    na.rm = TRUE
+  ),
+
+  DP = sapply(
+    dados_fatores4,
+    sd,
+    na.rm = TRUE
+  )
+
+)
+
+resultado_fatores4
+```
+Amabilidade apresentou a maior média (M = 4,22; DP = 0,91), seguida por Abertura à experiência (M = 4,12; DP = 0,64). Extroversão apresentou a menor média (M = 2,98; DP = 0,94). Conscienciosidade (M = 3,77; DP = 0,92) e Neuroticismo (M = 3,26; DP = 1,06) apresentaram valores intermediários.
+
+### Preparação dos dados para ANOVA intragrupo
+
+```{r}
+dados_long4 <- data.frame(
+
+  Participante = factor(
+    rep(
+      1:nrow(dados_fatores4),
+      times = 5
+    )
+  ),
+
+  Fator = factor(
+    rep(
+      c(
+        "Fator1",
+        "Fator2",
+        "Fator3",
+        "Fator4",
+        "Fator5"
+      ),
+      each = nrow(dados_fatores4)
+    )
+  ),
+
+  Pontuacao = c(
+    dados_fatores4$Fator1,
+    dados_fatores4$Fator2,
+    dados_fatores4$Fator3,
+    dados_fatores4$Fator4,
+    dados_fatores4$Fator5
+  )
+
+)
+```
+
+### ANOVA intragrupo
+
+```{r}
+anova_base4 <- aov(
+  Pontuacao ~ Fator + Error(Participante/Fator),
+  data = dados_long4
+)
+
+summary(anova_base4)
+```
+A ANOVA de medidas repetidas indicou diferenças estatisticamente significativas entre os cinco fatores de personalidade, F(4, 280) = 26,71, p < 0,001.
+
+### Teste de esfericidade e ANOVA
+
+```{r}
+anova_ez_base4 <- ez::ezANOVA(
+  data = dados_long4,
+  dv = Pontuacao,
+  wid = Participante,
+  within = Fator,
+  detailed = TRUE
+)
+
+anova_ez_base4
+```
+teste de Mauchly indicou violação do pressuposto de esfericidade (W = 0,599, p < 0,001). Assim, foi aplicada a correção de Greenhouse–Geisser (ε = 0,786). A ANOVA de medidas repetidas corrigida indicou diferenças estatisticamente significativas entre os fatores, F(3,14; 220,04) = 26,71, p < 0,001, η²G = 0,223.
+
+### Comparações entre os fatores
+
+```{r}
+pairwise.t.test(
+  dados_long4$Pontuacao,
+  dados_long4$Fator,
+  paired = TRUE,
+  p.adjust.method = "bonferroni"
+)
+```
+As comparações pareadas com correção de Bonferroni indicaram que Amabilidade apresentou média significativamente maior que Conscienciosidade (p = 0,023), Extroversão (p < 0,001) e Neuroticismo (p < 0,001). Abertura à experiência apresentou média significativamente maior que Extroversão e Neuroticismo (ambos p < 0,001). Conscienciosidade também apresentou média significativamente maior que Extroversão (p < 0,001). As demais comparações não apresentaram diferenças estatisticamente significativas.
+
+### Interpretação
+A escala apresentou consistência interna adequada (α = 0,722), com consistência de baixa a boa entre os cinco fatores (α = 0,577–0,858). A ANOVA de medidas repetidas, com correção de Greenhouse–Geisser, indicou diferenças significativas entre os fatores, F(3,14; 220,04) = 26,71, p < 0,001. As comparações de Bonferroni indicaram diferenças significativas entre diversos fatores. Descritivamente, Amabilidade apresentou a maior média (M = 4,22), enquanto Extroversão apresentou a menor (M = 2,98).
+
+
+
