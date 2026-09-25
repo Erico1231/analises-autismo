@@ -1,0 +1,25 @@
+
+Call:
+aov(formula = Pontuacao ~ Fator + Error(Participante/Fator), 
+    data = dados_long3)
+
+Grand Mean: 3.740741
+
+Stratum 1: Participante
+
+Terms:
+                Residuals
+Sum of Squares   1.434074
+Deg. of Freedom         2
+
+Residual standard error: 0.8467804
+
+Stratum 2: Participante:Fator
+
+Terms:
+                    Fator Residuals
+Sum of Squares   7.985185 13.845926
+Deg. of Freedom         8        16
+
+Residual standard error: 0.9302529
+Estimated effects may be unbalanced
